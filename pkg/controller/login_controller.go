@@ -8,7 +8,7 @@ import (
 )
 
 // Login authenticates a user and returns a token
-func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	// TODO: User must login and a token must be generated
 
 	helpers.RespondJSON(w, models.Login{})

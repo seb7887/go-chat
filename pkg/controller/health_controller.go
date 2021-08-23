@@ -9,7 +9,7 @@ import (
 )
 
 // Check returns the health of the service and DB
-func (h Handler) Check(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Check(w http.ResponseWriter, r *http.Request) {
 	// Check DB health
 	storage.GetInstance()
 	// if d, err := db.DB(); err != nil {

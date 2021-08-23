@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/challenge/pkg/helpers"
@@ -13,20 +12,26 @@ type newUserReq struct {
 }
 
 type newUserResp struct {
-	Id int `json:"id"`
+	Id uint `json:"id"`
 }
 
 // CreateUser creates a new user
-func (h Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-
+func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser newUserReq
-	err := decoder.Decode(&newUser)
-	if err != nil {
+
+	helpers.UnmarshallBody(r, &newUser)
+
+	if err := helpers.ValidateRequestBody(newUser); err != nil {
 		helpers.HandleError(w, "Invalid request body")
 		return
 	}
 
-	// TODO: Create a New User
-	helpers.RespondJSON(w, newUserResp{Id: 0})
+	// Create a new user
+	user, err := h.userService.AddUser(newUser.Username, newUser.Password)
+	if err != nil {
+		helpers.HandleError(w, "Error creating new user")
+		return
+	}
+
+	helpers.RespondJSON(w, newUserResp{Id: user.ID})
 }

@@ -3,6 +3,7 @@ module github.com/challenge
 go 1.13
 
 require (
+	github.com/go-playground/validator/v10 v10.9.0
 	github.com/joho/godotenv v1.3.0
 	github.com/sirupsen/logrus v1.8.1
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5

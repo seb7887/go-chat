@@ -7,6 +7,7 @@ import (
 	"github.com/challenge/pkg/auth"
 	"github.com/challenge/pkg/config"
 	"github.com/challenge/pkg/controller"
+	"github.com/challenge/pkg/services"
 	"github.com/challenge/pkg/storage"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,11 +22,13 @@ const (
 func main() {
 	serverPort := config.GetConfig().ServerPort
 	serverAddr := fmt.Sprintf(":%d", serverPort)
+	userRepository := storage.NewUserRepository()
+	userService := services.NewUserService(userRepository)
 
 	// Perform DB migrations
 	storage.Migrate()
 
-	h := controller.Handler{}
+	h := controller.NewHandler(userService)
 
 	// Configure endpoints
 	// Health
