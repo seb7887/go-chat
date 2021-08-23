@@ -3,6 +3,7 @@ module github.com/challenge
 go 1.13
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/joho/godotenv v1.3.0
 	github.com/sirupsen/logrus v1.8.1

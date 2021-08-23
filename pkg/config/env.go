@@ -11,7 +11,8 @@ import (
 )
 
 type Configuration struct {
-	ServerPort int `env:"SERVER_PORT" default:"8080" json:"serverPort"`
+	ServerPort int    `env:"SERVER_PORT" default:"8080" json:"serverPort"`
+	JwtSecret  string `env:"JWT_SECRET" default:"goChat" json:"jwtSecret"`
 }
 
 var config *Configuration

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/challenge/pkg/helpers"
 	"github.com/challenge/pkg/models"
 	"github.com/challenge/pkg/storage"
@@ -8,6 +10,7 @@ import (
 
 type UserService interface {
 	AddUser(username string, password string) (*models.User, error)
+	LoginUser(username string, password string) (*models.Login, error)
 }
 
 type userService struct {
@@ -32,4 +35,17 @@ func (s *userService) AddUser(username string, password string) (*models.User, e
 	}
 
 	return newUser, nil
+}
+
+func (s *userService) LoginUser(username string, password string) (*models.Login, error) {
+	user, err := s.repository.FindByUsername(username)
+	if err != nil {
+		return nil, fmt.Errorf("User not found")
+	}
+
+	if ok := helpers.VerifyPassword(password, user.Password); !ok {
+		return nil, fmt.Errorf("Invalid credentials")
+	}
+
+	return helpers.GenerateJwt(user.ID, user.Username)
 }
