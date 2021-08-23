@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	DB	*gorm.DB
+	DB   *gorm.DB
 	once sync.Once
 )
 

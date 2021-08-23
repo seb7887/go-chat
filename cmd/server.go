@@ -1,15 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/challenge/pkg/auth"
+	"github.com/challenge/pkg/config"
 	"github.com/challenge/pkg/controller"
+	"github.com/challenge/pkg/storage"
 	log "github.com/sirupsen/logrus"
 )
 
 const (
-	ServerPort       = "8080"
 	CheckEndpoint    = "/check"
 	UsersEndpoint    = "/users"
 	LoginEndpoint    = "/login"
@@ -17,6 +19,12 @@ const (
 )
 
 func main() {
+	serverPort := config.GetConfig().ServerPort
+	serverAddr := fmt.Sprintf(":%d", serverPort)
+
+	// Perform DB migrations
+	storage.Migrate()
+
 	h := controller.Handler{}
 
 	// Configure endpoints
@@ -64,6 +72,6 @@ func main() {
 	}))
 
 	// Start server
-	log.Println("Server started at port " + ServerPort)
-	log.Fatal(http.ListenAndServe(":"+ServerPort, nil))
+	log.Infof("Server started at port %d", serverPort)
+	log.Fatal(http.ListenAndServe(serverAddr, nil))
 }

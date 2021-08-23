@@ -1,5 +1,11 @@
 package models
 
+import (
+	"gorm.io/gorm"
+)
+
 type User struct {
-	// TODO: Implement User model
+	gorm.Model
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
