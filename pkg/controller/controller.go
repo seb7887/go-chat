@@ -16,11 +16,13 @@ type Handler interface {
 
 // Handler provides the interface to handle different requests
 type handler struct {
-	userService services.UserService
+	userService    services.UserService
+	messageService services.MessageService
 }
 
-func NewHandler(userService services.UserService) Handler {
+func NewHandler(userService services.UserService, messageService services.MessageService) Handler {
 	return &handler{
-		userService: userService,
+		userService,
+		messageService,
 	}
 }

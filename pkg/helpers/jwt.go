@@ -1,8 +1,6 @@
 package helpers
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/challenge/pkg/config"
@@ -26,23 +24,4 @@ func GenerateJwt(userId uint, username string) (*models.Login, error) {
 		Id:    userId,
 		Token: token,
 	}, nil
-}
-
-func VerifyJwt(header string) (jwt.MapClaims, error) {
-	jwtToken := strings.Replace(header, "Bearer ", "", -1)
-	claimData := jwt.MapClaims{}
-
-	token, err := jwt.ParseWithClaims(jwtToken, claimData, func(token *jwt.Token) (interface{}, error) {
-		return []byte(config.GetConfig().JwtSecret), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !token.Valid {
-		return nil, fmt.Errorf("Unauthorized")
-	}
-
-	return claimData, nil
 }

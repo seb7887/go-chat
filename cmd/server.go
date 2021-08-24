@@ -23,12 +23,11 @@ func main() {
 	serverPort := config.GetConfig().ServerPort
 	serverAddr := fmt.Sprintf(":%d", serverPort)
 	userRepository := storage.NewUserRepository()
+	messageRepository := storage.NewMessageRepository()
 	userService := services.NewUserService(userRepository)
+	messageService := services.NewMessageService(messageRepository)
 
-	// Perform DB migrations
-	storage.Migrate()
-
-	h := controller.NewHandler(userService)
+	h := controller.NewHandler(userService, messageService)
 
 	// Configure endpoints
 	// Health
