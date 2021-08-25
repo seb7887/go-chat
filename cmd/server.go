@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/challenge/pkg/auth"
 	"github.com/challenge/pkg/config"
@@ -20,18 +25,22 @@ const (
 )
 
 func main() {
-	serverPort := config.GetConfig().ServerPort
-	serverAddr := fmt.Sprintf(":%d", serverPort)
-	userRepository := storage.NewUserRepository()
-	messageRepository := storage.NewMessageRepository()
-	userService := services.NewUserService(userRepository)
-	messageService := services.NewMessageService(messageRepository)
+	var (
+		serverPort        = config.GetConfig().ServerPort
+		serverAddr        = fmt.Sprintf(":%d", serverPort)
+		userRepository    = storage.NewUserRepository()
+		messageRepository = storage.NewMessageRepository()
+		userService       = services.NewUserService(userRepository)
+		messageService    = services.NewMessageService(messageRepository)
+		h                 = controller.NewHandler(userService, messageService)
+	)
 
-	h := controller.NewHandler(userService, messageService)
+	// Mux Router
+	mux := http.NewServeMux()
 
 	// Configure endpoints
 	// Health
-	http.HandleFunc(CheckEndpoint, func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(CheckEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
 			return
@@ -41,7 +50,7 @@ func main() {
 	})
 
 	// Users
-	http.HandleFunc(UsersEndpoint, func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(UsersEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
 			return
@@ -51,7 +60,7 @@ func main() {
 	})
 
 	// Auth
-	http.HandleFunc(LoginEndpoint, func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(LoginEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
 			return
@@ -61,7 +70,7 @@ func main() {
 	})
 
 	// Messages
-	http.HandleFunc(MessagesEndpoint, auth.ValidateUser(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(MessagesEndpoint, auth.ValidateUser(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			h.GetMessages(w, r)
@@ -73,7 +82,34 @@ func main() {
 		}
 	}))
 
-	// Start server
-	log.Infof("Server started at port %d", serverPort)
-	log.Fatal(http.ListenAndServe(serverAddr, nil))
+	// Create HTTP server
+	server := &http.Server{
+		Addr:    serverAddr,
+		Handler: mux,
+	}
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		log.Infof("Server started at port %d", serverPort)
+		if err := server.ListenAndServe(); err != nil {
+			if err != http.ErrServerClosed {
+				log.Fatal(err.Error())
+			}
+		}
+	}()
+
+	// Gracefully shutdown
+	<-quit
+	log.Info("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown")
+	}
+
+	log.Info("Server exiting")
 }
