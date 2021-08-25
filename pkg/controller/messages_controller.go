@@ -1,11 +1,26 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/challenge/pkg/helpers"
 	"github.com/challenge/pkg/models"
+)
+
+var (
+	validContentTypes = map[string]string{
+		"text":  "text",
+		"image": "image",
+		"video": "video",
+	}
+	validSourceTypes = map[string]string{
+		"youtube": "youtube",
+		"vimeo":   "vimeo",
+	}
 )
 
 type newMsgResp struct {
@@ -20,7 +35,9 @@ func (h *handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	helpers.UnmarshallBody(r, &newMsg)
 
-	if err := helpers.ValidateRequestBody(newMsg); err != nil {
+	// Validate request body
+	err := helpers.ValidateRequestBody(newMsg)
+	if err != nil {
 		helpers.HandleError(w, "Invalid request body")
 		return
 	}
@@ -28,6 +45,13 @@ func (h *handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	// SenderID must be the same as UserID
 	if newMsg.Sender != uint(userId) {
 		helpers.HandleError(w, "Sender must be the user who is logged in")
+		return
+	}
+
+	// Validate content type and content source (if present)
+	err = validateMsgContent(newMsg.Content)
+	if err != nil {
+		helpers.HandleError(w, err.Error())
 		return
 	}
 
@@ -40,8 +64,61 @@ func (h *handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	helpers.RespondJSON(w, newMsgResp{Id: message.ID, Timestamp: message.Timestamp})
 }
 
+func validateMsgContent(content models.MsgContent) error {
+	contentType := strings.ToLower(content.Type)
+	if _, exists := validContentTypes[contentType]; !exists {
+		return fmt.Errorf("Invalid content type")
+	}
+
+	if contentType == "video" {
+		if _, exists := validSourceTypes[strings.ToLower(content.Source)]; !exists {
+			return fmt.Errorf("Invalid content source")
+		}
+	}
+
+	return nil
+}
+
 // GetMessages get the messages from the logged user to a recipient
 func (h *handler) GetMessages(w http.ResponseWriter, r *http.Request) {
-	// TODO: Retrieve list of Messages
-	helpers.RespondJSON(w, []*models.Message{{}})
+	userId := r.Context().Value("user_id").(float64)
+
+	// Parse query string params
+	req, err := parseQueryStrings(r)
+	if err != nil {
+		helpers.HandleError(w, "Error parsing query string params")
+		return
+	}
+
+	if err := helpers.ValidateRequestBody(req); err != nil {
+		helpers.HandleError(w, "Invalid request body")
+		return
+	}
+
+	// Retrieve list of Messages
+	messages, err := h.messageService.GetMessages(uint(userId), *req)
+	if err != nil {
+		helpers.HandleError(w, err.Error())
+		return
+	}
+
+	helpers.RespondJSON(w, messages)
+}
+
+func parseQueryStrings(r *http.Request) (*models.GetMsgsReq, error) {
+	query := r.URL.Query()
+
+	recipient, err := strconv.ParseUint(query["recipient"][0], 10, 32)
+	start, err := strconv.ParseUint(query["start"][0], 10, 32)
+	limit, err := strconv.ParseUint(query["limit"][0], 10, 32)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetMsgsReq{
+		Recipient: uint(recipient),
+		Start:     uint(start),
+		Limit:     uint(limit),
+	}, nil
 }

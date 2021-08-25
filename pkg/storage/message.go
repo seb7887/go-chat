@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 
 type MessageRepository interface {
 	Create(msg models.NewMsgReq) (*models.Message, error)
+	FindMessages(senderId uint, req models.GetMsgsReq) ([]QueryResult, error)
 }
 
 type messageRepository struct{}
@@ -22,7 +24,7 @@ func (r *messageRepository) Create(msg models.NewMsgReq) (*models.Message, error
 		SenderID:    msg.Sender,
 		RecipientID: msg.Recipient,
 		ContentType: msg.Content.Type,
-		Timestamp:   time.Now(),
+		Timestamp:   time.Now().UTC(),
 	}
 
 	db := GetInstance()
@@ -68,4 +70,42 @@ func (r *messageRepository) Create(msg models.NewMsgReq) (*models.Message, error
 	}
 
 	return &message, nil
+}
+
+type QueryResult struct {
+	ID          uint
+	SenderId    uint
+	RecipientId uint
+	ContentType string
+	CreatedAt   time.Time
+	Text        string
+	ImageUrl    string
+	Height      uint
+	Width       uint
+	VideoUrl    string
+	Source      string
+}
+
+func (r *messageRepository) FindMessages(senderId uint, req models.GetMsgsReq) ([]QueryResult, error) {
+	db := GetInstance()
+
+	var result []QueryResult
+	res := db.Raw(buildQuery(senderId, req.Recipient, req.Start, req.Limit)).Scan(&result)
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return result, nil
+}
+
+func buildQuery(senderId uint, recipientId uint, start uint, limit uint) string {
+	selectClause := "SELECT m.*, t.text, i.url AS image_url, i.height, i.width, v.url AS video_url, v.source FROM messages m"
+	textJoinClause := "LEFT OUTER JOIN texts t ON (t.message_id = m.id AND m.content_type = 'text')"
+	imageJoinClause := "LEFT OUTER JOIN images i ON (i.message_id = m.id AND m.content_type = 'image')"
+	videoJoinClause := "LEFT OUTER JOIN videos v ON (v.message_id = m.id AND m.content_type = 'video')"
+	whereClause := fmt.Sprintf("WHERE m.id >= %d AND sender_id = %d AND recipient_id = %d", start, senderId, recipientId)
+	orderByClause := fmt.Sprintf("ORDER BY m.id ASC LIMIT %d", limit)
+
+	return fmt.Sprintf("%s %s %s %s %s %s;", selectClause, textJoinClause, imageJoinClause, videoJoinClause, whereClause, orderByClause)
 }

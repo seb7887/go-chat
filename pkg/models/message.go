@@ -34,7 +34,7 @@ type Video struct {
 }
 
 type MsgContent struct {
-	Type   string
+	Type   string `json:"type"`
 	Text   string `json:"text,omitempty"`
 	Url    string `json:"url,omitempty"`
 	Height uint   `json:"height,omitempty"`
@@ -46,4 +46,18 @@ type NewMsgReq struct {
 	Sender    uint
 	Recipient uint
 	Content   MsgContent
+}
+
+type GetMsgsReq struct {
+	Recipient uint
+	Start     uint
+	Limit     uint
+}
+
+type MessageResp struct {
+	ID        uint       `json:"id"`
+	Timestamp time.Time  `json:"timestamp"`
+	Sender    uint       `json:"sender"`
+	Recipient uint       `json:"recipient"`
+	Content   MsgContent `json:"content"`
 }
