@@ -18,7 +18,7 @@ func GetInstance() *gorm.DB {
 	once.Do(func() {
 		database, err := gorm.Open(sqlite.Open("chat.db"), &gorm.Config{})
 		if err != nil {
-			log.Fatal("error initializing SQLite3 database %s", err.Error())
+			log.Fatalf("error initializing SQLite3 database %s", err.Error())
 		}
 		DB = database
 	})

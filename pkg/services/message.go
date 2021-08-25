@@ -9,7 +9,7 @@ import (
 
 type MessageService interface {
 	AddMessage(msg models.NewMsgReq) (*models.Message, error)
-	GetMessages(senderId uint, req models.GetMsgsReq) ([]*models.MessageResp, error)
+	GetMessages(senderId uint, req models.GetMsgsReq) ([]models.MessageResp, error)
 }
 
 type messageService struct {
@@ -31,7 +31,7 @@ func (s *messageService) AddMessage(msg models.NewMsgReq) (*models.Message, erro
 	return newMsg, nil
 }
 
-func (s *messageService) GetMessages(senderId uint, req models.GetMsgsReq) ([]*models.MessageResp, error) {
+func (s *messageService) GetMessages(senderId uint, req models.GetMsgsReq) ([]models.MessageResp, error) {
 	queryResult, err := s.repository.FindMessages(senderId, req)
 	if err != nil {
 		return nil, err
@@ -45,15 +45,15 @@ func (s *messageService) GetMessages(senderId uint, req models.GetMsgsReq) ([]*m
 	return response, nil
 }
 
-func formatMessagesResponse(result []storage.QueryResult) ([]*models.MessageResp, error) {
-	var resp []*models.MessageResp
+func formatMessagesResponse(result []storage.QueryResult) ([]models.MessageResp, error) {
+	var resp = []models.MessageResp{}
 
 	for _, v := range result {
 		r, err := formatMessageResp(v)
 		if err != nil {
 			return resp, err
 		}
-		resp = append(resp, &r)
+		resp = append(resp, r)
 	}
 
 	return resp, nil

@@ -24,3 +24,6 @@ clean:
 run:
 	$Q $(GO) run ./cmd/server.go
 
+.PHONY: test
+test:
+	$Q $(GO) test -cover ./...
