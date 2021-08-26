@@ -24,6 +24,10 @@ clean:
 run:
 	$Q $(GO) run ./cmd/main.go
 
+.PHONY: migrate
+migrate: ; $(info $(M) migrating schema...) @ ## Run database migration file
+																$Q sqlite3 chat.db '.read ./migrations/init.sql'
+
 .PHONY: test
 test:
 	$Q $(GO) test -cover ./...
