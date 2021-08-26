@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -10,11 +10,8 @@ import (
 	"time"
 
 	"github.com/challenge/pkg/auth"
-	"github.com/challenge/pkg/config"
 	"github.com/challenge/pkg/controller"
 	log "github.com/challenge/pkg/logger"
-	"github.com/challenge/pkg/services"
-	"github.com/challenge/pkg/storage"
 )
 
 const (
@@ -24,19 +21,8 @@ const (
 	MessagesEndpoint = "/messages"
 )
 
-func main() {
-	var (
-		serverPort        = config.GetConfig().ServerPort
-		serverAddr        = fmt.Sprintf(":%d", serverPort)
-		userRepository    = storage.NewUserRepository()
-		messageRepository = storage.NewMessageRepository()
-		userService       = services.NewUserService(userRepository)
-		messageService    = services.NewMessageService(messageRepository)
-		h                 = controller.NewHandler(userService, messageService)
-	)
-
-	// Setup logger
-	log.Setup()
+func Serve(port int, h controller.Handler) {
+	serverAddr := fmt.Sprintf(":%d", port)
 
 	// Mux Router
 	mux := http.NewServeMux()
@@ -95,7 +81,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Infof("Server started at port %d", serverPort)
+		log.Infof("Server started at port %d", port)
 		if err := server.ListenAndServe(); err != nil {
 			if err != http.ErrServerClosed {
 				log.Fatal(err.Error())

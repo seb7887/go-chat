@@ -10,7 +10,7 @@ $(BIN):
 
 .PHONY: all
 all: fmt $(BIN) ; $(info $(M) building executable) @ ## Build binary
-																$Q go build -o ./bin/challenge -race ./cmd/server.go
+																$Q go build -o ./bin/challenge -race ./cmd/main.go
 
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt...) @ ## Run gofmt on all source files
@@ -22,7 +22,7 @@ clean:
 
 .PHONY: run
 run:
-	$Q $(GO) run ./cmd/server.go
+	$Q $(GO) run ./cmd/main.go
 
 .PHONY: test
 test:

@@ -48,6 +48,11 @@ type NewMsgReq struct {
 	Content   MsgContent
 }
 
+type NewMsgResp struct {
+	Id        uint      `json:"id"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
 type GetMsgsReq struct {
 	Recipient uint
 	Start     uint

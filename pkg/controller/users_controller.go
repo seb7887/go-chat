@@ -4,20 +4,12 @@ import (
 	"net/http"
 
 	"github.com/challenge/pkg/helpers"
+	"github.com/challenge/pkg/models"
 )
-
-type newUserReq struct {
-	Username string
-	Password string
-}
-
-type newUserResp struct {
-	Id uint `json:"id"`
-}
 
 // CreateUser creates a new user
 func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var newUser newUserReq
+	var newUser models.NewUserReq
 
 	helpers.UnmarshallBody(r, &newUser)
 
@@ -33,5 +25,5 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.RespondJSON(w, newUserResp{Id: user.ID})
+	helpers.RespondJSON(w, models.NewUserResp{Id: user.ID})
 }

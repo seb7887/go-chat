@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/challenge/pkg/helpers"
 	"github.com/challenge/pkg/models"
@@ -22,11 +21,6 @@ var (
 		"vimeo":   "vimeo",
 	}
 )
-
-type newMsgResp struct {
-	Id        uint      `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
-}
 
 // SendMessage send a message from one user to another
 func (h *handler) SendMessage(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +55,7 @@ func (h *handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.RespondJSON(w, newMsgResp{Id: message.ID, Timestamp: message.Timestamp})
+	helpers.RespondJSON(w, models.NewMsgResp{Id: message.ID, Timestamp: message.Timestamp})
 }
 
 func validateMsgContent(content models.MsgContent) error {
