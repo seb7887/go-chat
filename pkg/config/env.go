@@ -13,6 +13,7 @@ import (
 type Configuration struct {
 	ServerPort int    `env:"SERVER_PORT" default:"8080" json:"serverPort"`
 	JwtSecret  string `env:"JWT_SECRET" default:"goChat" json:"jwtSecret"`
+	LogLevel   string `env:"LOG_LEVEL" default:"INFO" json:"logLevel"`
 }
 
 var config *Configuration

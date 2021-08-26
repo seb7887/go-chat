@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/challenge/pkg/config"
+	log "github.com/challenge/pkg/logger"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -19,6 +20,11 @@ func ValidateUser(next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, "Malformed token", http.StatusUnauthorized)
 			return
 		}
+
+		log.TraceWithFields(
+			"Request token",
+			map[string]interface{}{"token": authHeader},
+		)
 
 		// validate token
 		claims := jwt.MapClaims{}

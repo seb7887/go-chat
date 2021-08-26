@@ -3,7 +3,7 @@ package storage
 import (
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/challenge/pkg/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

@@ -12,9 +12,9 @@ import (
 	"github.com/challenge/pkg/auth"
 	"github.com/challenge/pkg/config"
 	"github.com/challenge/pkg/controller"
+	log "github.com/challenge/pkg/logger"
 	"github.com/challenge/pkg/services"
 	"github.com/challenge/pkg/storage"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -34,6 +34,9 @@ func main() {
 		messageService    = services.NewMessageService(messageRepository)
 		h                 = controller.NewHandler(userService, messageService)
 	)
+
+	// Setup logger
+	log.Setup()
 
 	// Mux Router
 	mux := http.NewServeMux()
