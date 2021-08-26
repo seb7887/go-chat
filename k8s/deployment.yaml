@@ -1,1 +1,69 @@
-#TODO: Create a manifest to deploy in k8s
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: challenge-config
+  labels:
+    app: challenge
+data:
+  SERVER_PORT: "8080"
+  JWT_SECRET: "jwtSecret"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: challenge
+  labels:
+    app: challenge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: challenge
+  template:
+    metadata:
+      labels:
+        app: challenge
+    spec:
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      containers:
+        - name: challenge
+          image: seb7887/challenge:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http-port
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: challenge-config
+          readinessProbe:
+            httpPost:
+              path: /check
+              port: http-port
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpPost:
+              path: /check
+              port: http-port
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: challenge
+  labels:
+    app: challenge
+spec:
+  selector:
+    app: challenge
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: http-port
+  type: ClusterIP
